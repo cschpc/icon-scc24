@@ -2680,7 +2680,7 @@ SUBROUTINE interpol_phys_grf (ext_data, prm_diag, p_lnd_state, jg, jgc, jn, lacc
 
         ! ensure that only nest boundary points are processed
         i_count = 0
-        !$ACC SERIAL DEFAULT(PRESENT) REDUCTION(+: i_count) ASYNC(1) IF(lzacc)
+        !$ACC SERIAL DEFAULT(PRESENT) COPY(i_count) REDUCTION(+: i_count) ASYNC(1) IF(lzacc)
         DO ic = 1, ext_data(jgc)%atm%list_lake%ncount(jb)
           jc = ext_data(jgc)%atm%list_lake%idx(ic,jb)
           IF (jc >= i_startidx .AND. jc <= i_endidx) THEN

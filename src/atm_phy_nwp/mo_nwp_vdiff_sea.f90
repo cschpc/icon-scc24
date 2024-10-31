@@ -988,7 +988,7 @@ CONTAINS
           END IF
         !$ACC END PARALLEL
 
-        !$ACC SERIAL DEFAULT(PRESENT) PRIVATE(i_count, ic, io, jc, newice_found) REDUCTION(+: g_count_ice_created) ASYNC(1) IF(lzacc)
+        !$ACC SERIAL DEFAULT(PRESENT) PRIVATE(i_count, ic, io, jc, newice_found) COPY(g_count_ice_created) REDUCTION(+: g_count_ice_created) ASYNC(1) IF(lzacc)
           i_count = seaice_list%ncount(iblk)
           seaice_list%ncount(iblk) = 0
 

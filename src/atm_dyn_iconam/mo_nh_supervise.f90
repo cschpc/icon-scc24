@@ -282,6 +282,7 @@ CONTAINS
       ENDIF
       !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1)
       !$ACC LOOP GANG VECTOR COLLAPSE(2) PRIVATE(z_volume) &
+      !$ACC   COPY(z_total_mass, z_kin_energy, z_int_energy, z_pot_energy, z_dry_mass) &
       !$ACC   REDUCTION(+, z_total_mass, z_kin_energy, z_int_energy, z_pot_energy, z_dry_mass)
       DO jk = 1, nlev
         DO jc = 1, nlen
@@ -302,7 +303,7 @@ CONTAINS
       !$ACC END PARALLEL
 
       !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1)
-      !$ACC LOOP GANG VECTOR COLLAPSE(2) REDUCTION(+, z_mean_surfp)
+      !$ACC LOOP GANG VECTOR COLLAPSE(2) COPY(z_mean_surfp) REDUCTION(+, z_mean_surfp)
       DO jc = 1, nlen
         z_mean_surfp = z_mean_surfp + diag%pres_sfc(jc,jb)*patch%cells%area(jc,jb) /  &
           &  (4._wp*grid_sphere_radius**2*pi)
@@ -686,8 +687,14 @@ CONTAINS
     LOGICAL, INTENT(IN), OPTIONAL :: lacc ! If true, use openacc
 
     ! local variables
+! Work around for Cray compiler bug
+#ifdef _CRAYFTN
+    REAL(wp), ALLOCATABLE :: vn_aux(:,:), w_aux(:,:)
+#else
     REAL(wp) :: vn_aux(patch%edges%end_blk(min_rledge_int,MAX(1,patch%n_childdom)),patch%nlev)
     REAL(wp) :: w_aux (patch%cells%end_blk(min_rlcell_int,MAX(1,patch%n_childdom)),patch%nlevp1)
+#endif
+
     REAL(wp) :: vn_aux_lev(patch%nlev), w_aux_lev(patch%nlevp1), vmax(2), vn_aux_tmp, w_aux_tmp
 
     INTEGER  :: istartblk_c, istartblk_e, iendblk_c, iendblk_e, i_startidx, i_endidx
@@ -700,6 +707,11 @@ CONTAINS
 
     !-----------------------------------------------------------------------
     CALL set_acc_host_or_device(lzacc, lacc)
+
+#ifdef _CRAYFTN
+    ALLOCATE(vn_aux(patch%edges%end_blk(min_rledge_int,MAX(1,patch%n_childdom)),patch%nlev))
+    ALLOCATE(w_aux (patch%cells%end_blk(min_rlcell_int,MAX(1,patch%n_childdom)),patch%nlevp1))
+#endif
 
     istartblk_c = patch%cells%start_block(grf_bdywidth_c+1)
     istartblk_e = patch%edges%start_block(grf_bdywidth_e+1)
@@ -832,6 +844,8 @@ CONTAINS
     max_w_level    = keyval(2)
     max_w_process  = proc_id(2)
 
+    DEALLOCATE(vn_aux, w_aux)
+
   END SUBROUTINE calculate_maxwinds
 
 
@@ -864,7 +878,7 @@ CONTAINS
                          grf_bdywidth_e+1, min_rledge_int)
 
       max_hcfl_tmp = 0._wp
-      !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1)
+      !$ACC PARALLEL DEFAULT(PRESENT) COPY(max_hcfl_tmp) ASYNC(1) REDUCTION(MAX: max_hcfl_tmp)
       !$ACC LOOP GANG VECTOR COLLAPSE(2) REDUCTION(MAX: max_hcfl_tmp)
       DO jk = 1, nlev_hcfl
         DO je = i_startidx, i_endidx
@@ -949,7 +963,7 @@ CONTAINS
 
         dps_blk_scal = 0._wp
         npoints_blk_scal = 0
-        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) REDUCTION(+: dps_blk_scal, npoints_blk_scal) IF(lzacc)
+        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) COPY(dps_blk_scal, npoints_blk_scal) REDUCTION(+: dps_blk_scal, npoints_blk_scal) IF(lzacc)
         DO jc = i_startidx, i_endidx
           dps_blk_scal = dps_blk_scal + ABS(pt_diag%ddt_pres_sfc(jc,jb))
           npoints_blk_scal = npoints_blk_scal + 1

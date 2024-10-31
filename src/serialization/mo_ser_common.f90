@@ -333,7 +333,7 @@ MODULE mo_ser_common
 
     call fs_read_field(ppser_serializer_ref, ppser_savepoint, TRIM(name), ref)
     !$ACC UPDATE DEVICE(ref) ASYNC(1) IF(lopenacc)
-    !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) IF(lopenacc)
+    !$ACC PARALLEL DEFAULT(PRESENT) COPY(n_fail) ASYNC(1) REDUCTION(+: n_fail) IF(lopenacc)
     !$ACC LOOP GANG VECTOR COLLAPSE(1) REDUCTION(+: n_fail)
     DO i=1,size(cur, 1)
       call is_close(ref(i), cur(i), abs_threshold, rel_threshold, rel_diff(i), abs_diff(i), out)

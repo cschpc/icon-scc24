@@ -316,7 +316,7 @@ CONTAINS
     CALL set_acc_host_or_device(lzacc, lacc)
 
     frsi_err = frsi_min
-    !$ACC PARALLEL ASYNC(1) DEFAULT(PRESENT) REDUCTION(MIN: frsi_err) IF(lzacc)
+    !$ACC PARALLEL ASYNC(1) DEFAULT(PRESENT) COPY(frsi_err) REDUCTION(MIN: frsi_err) IF(lzacc)
     !$ACC LOOP GANG VECTOR REDUCTION(MIN: frsi_err)
     DO isi=1, nsigb
       ! Find minimum sea-ice fraction

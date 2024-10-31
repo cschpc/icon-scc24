@@ -677,7 +677,7 @@ SUBROUTINE organize_lhn ( dt_loc, p_sim_time,             & !>in
             &                i_startidx, i_endidx, i_rlstart, i_rlend)
        
        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) &
-       !$ACC   REDUCTION(+: zprmod_scal, zprref_scal)
+       !$ACC   COPY(zprmod_scal, zprref_scal) REDUCTION(+: zprmod_scal, zprref_scal)
        DO jc=i_startidx,i_endidx
          zprmod_scal    = zprmod_scal    + pr_mod(jc,jb)
          zprref_scal    = zprref_scal    + pr_ref(jc,jb)
@@ -1463,7 +1463,7 @@ SUBROUTINE lhn_obs_prep (pt_patch,radar_data,lhn_fields,pr_obs,hzerocl, &
          &                i_startidx, i_endidx, i_rlstart, i_rlend)
 
        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) &
-       !$ACC   REDUCTION(+: obs_sum_g, nsum_g)
+       !$ACC   COPY(obs_sum_g, nsum_g) REDUCTION(+: obs_sum_g, nsum_g)
        DO jc = i_startidx,i_endidx
            IF (obs_cnt (jc,jb) <  1_i4 ) CYCLE
            obs_sum (jc,jb) = obs_sum (jc,jb) / REAL(obs_cnt (jc,jb),wp)
@@ -2334,6 +2334,7 @@ SUBROUTINE lhn_t_inc (i_startidx, i_endidx,jg,ke,zlev,tt_lheat,wobs_time, wobs_s
 
   !$ACC PARALLEL LOOP GANG VECTOR &
   !$ACC   DEFAULT(PRESENT) PRIVATE(ip, pr_quot, scale_fac, fac, prmax, prmax_th) &
+  !$ACC   COPY(n_local, n_down, n_up, n_down_lim, n_artif, n_up_lim) &
   !$ACC   REDUCTION(+: n_local, n_down, n_up, n_down_lim, n_artif, n_up_lim) ASYNC(1)
 !NEC$ ivdep
   DO i = 1, ntreat
@@ -2481,6 +2482,7 @@ SUBROUTINE lhn_t_inc (i_startidx, i_endidx,jg,ke,zlev,tt_lheat,wobs_time, wobs_s
   ENDIF
 
   !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) DEFAULT(PRESENT) PRIVATE(ip) &
+  !$ACC   COPY(n_incloud, n_ex_lim_p, n_ex_lim_n) &
   !$ACC   REDUCTION(+: n_incloud, n_ex_lim_p, n_ex_lim_n) ASYNC(1)
   DO k = 1, ke
 !NEC$ ivdep
@@ -2537,6 +2539,7 @@ SUBROUTINE lhn_t_inc (i_startidx, i_endidx,jg,ke,zlev,tt_lheat,wobs_time, wobs_s
   IF (assimilation_config(jg)%lhn_wweight) THEN
     !$ACC PARALLEL LOOP GANG VECTOR &
     !$ACC   DEFAULT(PRESENT) PRIVATE(ip, umean, vmean, zvb) &
+    !$ACC   COPY(n_windcor, n_windcor0) &
     !$ACC   REDUCTION(+: n_windcor, n_windcor0) ASYNC(1)
 !NEC$ ivdep
     DO i = 1, ntreat
@@ -2735,6 +2738,7 @@ SUBROUTINE lhn_q_inc(i_startidx,i_endidx,jg,zdt,ke,t,ttend_lhn,p,qv,qc,qi, &
 
   !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) &
   !$ACC   DEFAULT(PRESENT) PRIVATE(zp, esat, relhum, zqv) &
+  !$ACC   COPY(nred, ninc, ninc2) &
   !$ACC   REDUCTION(+: nred, ninc, ninc2) ASYNC(1)
   DO   k=1,ke
     DO jc = i_startidx,i_endidx
@@ -2879,7 +2883,7 @@ SUBROUTINE filter_prof (prof_filt,ntreat,treat_list,kup,klow,eps,lelim,lsmooth, 
 ! eliminate isolated peaks
    IF (lelim) THEN
 
-     !$ACC PARALLEL DEFAULT(PRESENT) REDUCTION(+: nelimosc, nelimiso) ASYNC(1)
+     !$ACC PARALLEL DEFAULT(PRESENT) COPY(nelimosc, nelimiso) REDUCTION(+: nelimosc, nelimiso) ASYNC(1)
      !$ACC LOOP GANG(STATIC: 1) VECTOR PRIVATE(ip)
 !NEC$ ivdep
      DO i = 1, ntreat
@@ -2986,7 +2990,7 @@ SUBROUTINE filter_prof (prof_filt,ntreat,treat_list,kup,klow,eps,lelim,lsmooth, 
 ! smooth profile
    IF (lsmooth) THEN
 
-     !$ACC PARALLEL DEFAULT(PRESENT) REDUCTION(+: nsmooth) ASYNC(1)
+     !$ACC PARALLEL DEFAULT(PRESENT) COPY(nsmooth) REDUCTION(+: nsmooth) ASYNC(1)
      !$ACC LOOP SEQ
      DO k=klow-1,kup+1,-1
 !NEC$ ivdep

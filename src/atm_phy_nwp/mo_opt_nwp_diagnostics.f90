@@ -218,7 +218,7 @@ CONTAINS
     ! Set the uppermost model level for the occurence of a wet bulb temperature (wbl)
     ! to about 8000m above surface
     ktopmin = nlev+2
-    !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) REDUCTION(MIN: ktopmin) IF(lzacc)
+    !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) COPY(ktopmin) REDUCTION(MIN: ktopmin) IF(lzacc)
     DO k = nlev+1, 1, -1
       IF ( hhlr(k) < 8000.0_wp ) THEN
         ktopmin = k
@@ -408,7 +408,7 @@ CONTAINS
 
       ! loop over target (ICON) land points only
       i_count = ext_data%atm%list_land%ncount(jb)
-      !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) IF(lzacc)
+      !$ACC PARALLEL DEFAULT(PRESENT) COPY(ierr) REDUCTION(MIN: ierr) ASYNC(1) IF(lzacc)
       !$ACC LOOP GANG PRIVATE(jc)
       DO ic = 1, i_count
         jc = ext_data%atm%list_land%idx(ic,jb)

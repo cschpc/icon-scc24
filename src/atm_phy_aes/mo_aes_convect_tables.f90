@@ -855,7 +855,7 @@ SUBROUTINE prepare_ua_index_spline(jg, name, jcs, size, temp, idx, zalpha, &
     ztmax = flucupmax
     IF (PRESENT(xi)) THEN
       znphase = 0.0_wp
-      !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1)
+      !$ACC PARALLEL DEFAULT(PRESENT) COPY(znphase) REDUCTION(+: znphase) ASYNC(1)
       !$ACC LOOP GANG VECTOR PRIVATE(ztshft, ztt, ztest) REDUCTION(+: znphase) PRIVATE(zinbounds)
       DO jl = jcs,size
         ztshft = FSEL(tmelt-temp(jl),1.0_wp,0.0_wp)
@@ -1018,7 +1018,7 @@ SUBROUTINE prepare_ua_index_spline(jg, name, jcs, size, temp, idx, zalpha, &
       !$ACC END PARALLEL
 
       IF (sanitize_index) THEN
-        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) REDUCTION(+: zoutofbounds) ASYNC(1)
+        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) COPY(zoutofbounds) REDUCTION(+: zoutofbounds) ASYNC(1)
         DO batch = 1,batch_size
           nphase = INT(znphase)
           zoutofbounds = zoutofbounds + zoutofbounds_vec(batch)
@@ -1037,7 +1037,7 @@ SUBROUTINE prepare_ua_index_spline(jg, name, jcs, size, temp, idx, zalpha, &
     ELSE
 
       IF (sanitize_index) THEN
-        !$ACC PARALLEL LOOP DEFAULT(PRESENT) REDUCTION(+: zoutofbounds) GANG VECTOR COLLAPSE(2) ASYNC(1)
+        !$ACC PARALLEL LOOP DEFAULT(PRESENT) COPY(zoutofbounds) REDUCTION(+: zoutofbounds) GANG VECTOR COLLAPSE(2) ASYNC(1)
         DO batch = 1,batch_size
           DO jl = jcs, jce
             ztshft = FSEL(tmelt-temp(jl,batch),1.0_wp,0.0_wp)

@@ -1998,7 +1998,7 @@ CONTAINS
         ! Sanity check
         ! Check whether fractions of seaice and non-seaice covered tiles sum up to total sea fraction. 
         max_diff = 0.0_wp
-        !$ACC PARALLEL ASYNC(1) DEFAULT(PRESENT) REDUCTION(MAX: max_diff) IF(lzacc)
+        !$ACC PARALLEL ASYNC(1) DEFAULT(PRESENT) COPY(max_diff) REDUCTION(MAX: max_diff) IF(lzacc)
         !$ACC LOOP GANG(STATIC: 1) VECTOR PRIVATE(jc, frac_sea, lc_frac_t, diff_frac) REDUCTION(MAX: max_diff)
         DO ic = 1,i_count_sea
           jc = ext_data%atm%list_sea%idx(ic,jb)
