@@ -627,7 +627,7 @@ CONTAINS
       IF (nitems1 >= SIZE(str_list1)) THEN
         ALLOCATE (tmp(2*SIZE(str_list1)))
         tmp(1:nitems1) = str_list1(1:nitems1)
-! how f***ed up a compiler can be...
+! move_alloc is broken with this particular compiler release
 #if defined(_CRAYFTN) && _RELEASE_MAJOR == 18 && _RELEASE_MINOR == 0 && _RELEASE_PATCHLEVEL == 0
       DEALLOCATE(str_list1)
 #endif 

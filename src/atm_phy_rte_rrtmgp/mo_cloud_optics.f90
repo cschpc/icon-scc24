@@ -385,9 +385,16 @@ contains
                                ciwp  (:,:), &   ! cloud liquid water path (units?)
                                reliq (:,:), &   ! cloud ice particle effective size (microns)
                                reice (:,:)      ! cloud liquid particle effective radius (microns)
+#ifdef _CRAYFTN
+    class(ty_optical_props_arry), target, &
+              intent(inout) :: optical_props
+                                               ! Dimensions: (ncol,nlay,nbnd)
+    real(wp), pointer :: tau_pnt(:,:,:), ssa_pnt(:,:,:), g_pnt(:,:,:)
+#else
     class(ty_optical_props_arry), &
               intent(inout) :: optical_props
                                                ! Dimensions: (ncol,nlay,nbnd)
+#endif
 
     character(len=128)      :: error_msg
     ! ------- Local -------
@@ -530,34 +537,58 @@ contains
       !
       select type(optical_props)
       type is (ty_optical_props_1scl)
+#ifdef _CRAYFTN
+        tau_pnt => optical_props%tau
+        !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) FIRSTPRIVATE(nbnd, nlay, ncol) &
+        !$ACC   COPYIN(optical_props) COPYOUT(tau_pnt)
+#else        
         !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) FIRSTPRIVATE(nbnd, nlay, ncol) &
         !$ACC   COPYIN(optical_props) COPYOUT(optical_props%tau)
-
+#endif
         !$ACC LOOP GANG VECTOR COLLAPSE(3)
         do ibnd = 1, nbnd
           do ilay = 1, nlay
             do icol = 1,ncol
               ! Absorption optical depth  = (1-ssa) * tau = tau - taussa
+#ifdef _CRAYFTN
+              tau_pnt(icol,ilay,ibnd) = (ltau(icol,ilay,ibnd) - ltaussa(icol,ilay,ibnd)) + &
+                                                  (itau(icol,ilay,ibnd) - itaussa(icol,ilay,ibnd))
+#else
               optical_props%tau(icol,ilay,ibnd) = (ltau(icol,ilay,ibnd) - ltaussa(icol,ilay,ibnd)) + &
                                                   (itau(icol,ilay,ibnd) - itaussa(icol,ilay,ibnd))
+#endif
             end do
           end do
         end do
         !$ACC END PARALLEL
       type is (ty_optical_props_2str)
+#ifdef _CRAYFTN
+        tau_pnt => optical_props%tau
+        ssa_pnt => optical_props%ssa
+        g_pnt => optical_props%g
+        !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) FIRSTPRIVATE(nbnd, nlay, ncol) &
+        !$ACC   COPYIN(optical_props) COPYOUT(tau_pnt, ssa_pnt, g_pnt)
+#else
         !$ACC PARALLEL DEFAULT(PRESENT) ASYNC(1) FIRSTPRIVATE(nbnd, nlay, ncol) &
         !$ACC   COPYIN(optical_props) COPYOUT(optical_props%tau, optical_props%ssa, optical_props%g)
-
+#endif
         !$ACC LOOP GANG VECTOR COLLAPSE(3) PRIVATE(tau, taussa)
         do ibnd = 1, nbnd
           do ilay = 1, nlay
             do icol = 1,ncol
               tau    = ltau   (icol,ilay,ibnd) + itau   (icol,ilay,ibnd)
               taussa = ltaussa(icol,ilay,ibnd) + itaussa(icol,ilay,ibnd)
+#ifdef _CRAYFTN
+              g_pnt  (icol,ilay,ibnd) = (ltaussag(icol,ilay,ibnd) + itaussag(icol,ilay,ibnd)) / &
+                                                        max(epsilon(tau), taussa)
+              ssa_pnt(icol,ilay,ibnd) = taussa/max(epsilon(tau), tau)
+              tau_pnt(icol,ilay,ibnd) = tau
+#else
               optical_props%g  (icol,ilay,ibnd) = (ltaussag(icol,ilay,ibnd) + itaussag(icol,ilay,ibnd)) / &
                                                         max(epsilon(tau), taussa)
               optical_props%ssa(icol,ilay,ibnd) = taussa/max(epsilon(tau), tau)
               optical_props%tau(icol,ilay,ibnd) = tau
+#endif
             end do
           end do
         end do
