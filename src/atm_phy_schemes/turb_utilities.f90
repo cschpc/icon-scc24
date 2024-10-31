@@ -906,8 +906,13 @@ INTEGER :: &
 
    !$ACC DATA PRESENT(prs, t, qv, exner, rcld) &
    !$ACC   PRESENT(tet_l, q_h2o, q_liq) &
-   !$ACC   PRESENT(qc, dens, r_cpd) &
    !$ACC   PRESENT(qst_t, g_tet, g_h2o, fip) &
+!ACCWA workaround for issue with optional arguments
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+   !$ACC   NO_CREATE(qc, dens, r_cpd) &
+#else
+   !$ACC   PRESENT(qc, dens, r_cpd) &
+#endif
    !$ACC   CREATE(rprs) &
    !$ACC   COPYIN(i_en) &
    !$ACC   ASYNC(acc_async_queue) IF(lzacc)
