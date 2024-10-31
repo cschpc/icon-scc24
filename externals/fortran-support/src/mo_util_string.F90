@@ -627,6 +627,10 @@ CONTAINS
       IF (nitems1 >= SIZE(str_list1)) THEN
         ALLOCATE (tmp(2*SIZE(str_list1)))
         tmp(1:nitems1) = str_list1(1:nitems1)
+! how f***ed up a compiler can be...
+#if defined(_CRAYFTN) && _RELEASE_MAJOR == 18 && _RELEASE_MINOR == 0 && _RELEASE_PATCHLEVEL == 0
+      DEALLOCATE(str_list1)
+#endif 
         CALL MOVE_ALLOC(tmp, str_list1)
       END IF
 
@@ -657,6 +661,10 @@ CONTAINS
     IF (nitems >= SIZE(str_list)) THEN
       ALLOCATE (tmp(2*SIZE(str_list)))
       tmp(1:nitems) = str_list(1:nitems)
+! how f***ed up a compiler can be...
+#if defined(_CRAYFTN) && _RELEASE_MAJOR == 18 && _RELEASE_MINOR == 0 && _RELEASE_PATCHLEVEL == 0
+      DEALLOCATE(str_list)
+#endif 
       CALL MOVE_ALLOC(tmp, str_list)
     END IF
 
