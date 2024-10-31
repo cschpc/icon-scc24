@@ -315,7 +315,7 @@ module mo_cdi
   public :: cdiIterator_inqLevelUuid
   public :: cdiIterator_inqTile
   public :: cdiIterator_inqTileCount
-  public :: cdiIterator_inqParam
+  !public :: cdiIterator_inqParam
   public :: cdiIterator_inqParamParts
   public :: cdiIterator_inqDatatype
   public :: cdiIterator_inqFiletype
@@ -3620,19 +3620,19 @@ contains
     & outTileAttributeCount_dummy)
   end function cdiIterator_inqTileCount
 
-  function cdiIterator_inqParam(me_dummy) result(f_result)
-    type(t_CdiParam) :: f_result
-    type(t_CdiIterator), intent(in) :: me_dummy
-    interface
-      function lib_cdiIterator_inqParam(me_dummy) bind(c, name =&
-      & 'cdiIterator_inqParam') result(c_result)
-        import c_ptr, t_CdiParam
-        type(t_CdiParam) :: c_result
-        type(c_ptr), value :: me_dummy
-      end function lib_cdiIterator_inqParam
-    end interface
-    f_result = lib_cdiIterator_inqParam(me_dummy%ptr)
-  end function cdiIterator_inqParam
+!  function cdiIterator_inqParam(me_dummy) result(f_result)
+!    type(t_CdiParam) :: f_result
+!    type(t_CdiIterator), intent(in) :: me_dummy
+!    interface
+!      function lib_cdiIterator_inqParam(me_dummy) bind(c, name =&
+!      & 'cdiIterator_inqParam') result(c_result)
+!        import c_ptr, t_CdiParam
+!        type(t_CdiParam) :: c_result
+!        type(c_ptr), value :: me_dummy
+!      end function lib_cdiIterator_inqParam
+!    end interface
+!    f_result = lib_cdiIterator_inqParam(me_dummy%ptr)
+!  end function cdiIterator_inqParam
 
   subroutine cdiIterator_inqParamParts(me_dummy, outDiscipline_dummy,&
   & outCategory_dummy, outNumber_dummy)
