@@ -1,3 +1,5 @@
+**Note:** This is a fork of ICON open source repository, with workarounds (in the `scc24-workarounds` branch) needed for Cray Fortran compilers. The workarounds are being merged to upstream.
+
 ![ICON Logo](./doc/contrib/ICON_logo_black.jpg){: width="250px" height="100px" align="left"}
 
 ---
