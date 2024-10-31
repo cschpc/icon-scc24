@@ -448,7 +448,7 @@ SUBROUTINE nwp_turbdiff  ( tcall_turb_jg,                     & !>in
       nzprv = 1
 
       !$ACC KERNELS ASYNC(1) DEFAULT(PRESENT)
-#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 16
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
       ! ACCWA (Cray Fortran <= 16.0.1.1) : explicit type conversion fails with HSA memory error CAST-32450
       ! In principle, implicit conversion works correctly, however, for code readability 
       ! this should be removed when compiler is fixed 
