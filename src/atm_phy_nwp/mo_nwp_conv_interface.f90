@@ -161,7 +161,7 @@ CONTAINS
     CALL set_acc_host_or_device(lzacc, lacc)
 
     !$ACC DATA &
-    !$ACC   PRESENT(kstart_moist(jg)) &
+    !$ACC   PRESENT(kstart_moist) &
     !$ACC   CREATE(z_ddspeed, z_dtdqv, z_dtdt, z_dtdt_sv) &
     !$ACC   CREATE(z_omega_p, z_plitot, z_qhfl, z_shfl) &
     !$ACC   IF(lzacc)
