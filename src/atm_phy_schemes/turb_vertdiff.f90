@@ -441,11 +441,18 @@ REAL (KIND=wp), TARGET ::   &
     eprs     (nvec,ke1:ke1), & ! surface Exner-factor
 
     dicke    (nvec,ke1),     & ! any (effective) depth of model layers (m) or other auxilary variables
+!ACCWA weird bug with automatic arrays
+#if !(defined(_CRAYFTN) && _RELEASE_MAJOR <= 18)
     hlp      (nvec,ke1),     & ! any 'help' variable
+#endif
 
     zaux     (nvec,ke1,ndim)   ! auxilary array containing thermodynamical properties
                                ! (dQs/dT,ex_fakt,cp_fakt,g_tet,g_vap) or various
                                ! auxilary variables for calculation of implicit vertical diffusion
+!ACCWA weird bug with automatic arrays
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+REAL (KIND=wp), TARGET, ALLOCATABLE :: hlp(:,:)
+#endif
 
 LOGICAL :: ldebug=.FALSE.
 
@@ -456,6 +463,10 @@ INTEGER :: my_cart_id, my_thrd_id
 !===============================================================================
 
 !All variables and their tendencies are defined at horizontal mass positions.
+
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+  ALLOCATE(hlp(nvec,ke1))
+#endif
 
 
   ldogrdcor=(lexpcor .AND. lturatm)             !gradient correction has to be done
@@ -1123,6 +1134,9 @@ enddo
   !$ACC WAIT(1)
   !$ACC END DATA
 
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+  DEALLOCATE(hlp)
+#endif
 END SUBROUTINE vertdiff
 
 !==============================================================================

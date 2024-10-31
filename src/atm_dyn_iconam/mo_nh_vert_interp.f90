@@ -118,7 +118,7 @@ CONTAINS
       ENDIF
     ENDDO
 #else
-    !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) ASYNC(1) DEFAULT(PRESENT) REDUCTION(MIN: start_idx_diff_threshold) IF(lacc)
+    !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) COPY(start_idx_diff_threshold) ASYNC(1) DEFAULT(PRESENT) REDUCTION(MIN: start_idx_diff_threshold) IF(lacc)
     DO jk = 1, nlevs
       DO jc = 1, nlen
         IF ( z2d_in(jc,jk)-z_reference(jc) <= threshold ) THEN
@@ -165,7 +165,7 @@ CONTAINS
       ENDIF
     ENDDO
 #else
-    !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) DEFAULT(PRESENT) REDUCTION(MIN: start_idx_threshold) ASYNC(1) IF(lacc)
+    !$ACC PARALLEL LOOP GANG VECTOR COLLAPSE(2) DEFAULT(PRESENT) COPY(start_idx_threshold) REDUCTION(MIN: start_idx_threshold) ASYNC(1) IF(lacc)
     DO jk = 1, nlevs
       DO jc = 1, nlen
         IF ( zalml(jc,jk) < threshold ) THEN
@@ -916,7 +916,7 @@ CONTAINS
 #ifdef _OPENACC
         lfound_all = .TRUE.
         ! The following reduction must appear in its own small kernel as it did not work otherwise with Nvidia 21.2
-        !$ACC PARALLEL LOOP VECTOR DEFAULT(PRESENT) ASYNC(1) IF(lzacc) REDUCTION(.AND.: lfound_all)
+        !$ACC PARALLEL LOOP VECTOR DEFAULT(PRESENT) COPY(lfound_all) ASYNC(1) IF(lzacc) REDUCTION(.AND.: lfound_all)
         DO jc = 1, nlen
           lfound_all = lfound_all .AND. l_found(jc)
         ENDDO
@@ -1324,7 +1324,7 @@ CONTAINS
 #ifdef _OPENACC
         lfound_all = .TRUE.
         ! The following reduction must appear in its own small kernel as it did not work otherwise with Nvidia 21.2
-        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) ASYNC(1) IF(lzacc) REDUCTION(.AND.: lfound_all)
+        !$ACC PARALLEL LOOP GANG VECTOR DEFAULT(PRESENT) COPY(lfound_all) ASYNC(1) IF(lzacc) REDUCTION(.AND.: lfound_all)
         DO jc = 1, nlen
           lfound_all = lfound_all .AND. l_found(jc)
         ENDDO
@@ -2683,13 +2683,27 @@ CONTAINS
 
     LOGICAL :: lrestore_fricred
 
+! ACCWA weird problem with automatic arrays
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+    REAL(wp), ALLOCATABLE, DIMENSION(:,:)  :: zalml_in, fric_red, uv_mod, g1, g2, g3, &
+    &                      zalml_in_d, zalml_out, zdiff_inout, red_speed
+#else
     REAL(wp), DIMENSION(nproma,nlevs_in)  :: zalml_in, fric_red, uv_mod, g1, g2, g3
     REAL(wp), DIMENSION(nproma,nlevs_in-1) :: zalml_in_d
     REAL(wp), DIMENSION(nproma,nlevs_out) :: zalml_out, zdiff_inout, red_speed
+#endif
     LOGICAL :: lzacc ! non-optional version of lacc
 
 !-------------------------------------------------------------------------
     CALL set_acc_host_or_device(lzacc, lacc)
+
+! ACCWA weird problem with automatic arrays
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+    ALLOCATE(zalml_in(nproma,nlevs_in), fric_red(nproma,nlevs_in), uv_mod(nproma,nlevs_in), g1(nproma,nlevs_in),g2(nproma,nlevs_in),g3(nproma,nlevs_in))
+    ALLOCATE(zalml_in_d(nproma,nlevs_in-1)) 
+    ALLOCATE(zalml_out(nproma,nlevs_out), zdiff_inout(nproma,nlevs_out), red_speed(nproma,nlevs_out))
+#endif
+
 
     ! return, if nothing to do:
     IF ((nblks == 0) .OR. ((nblks == 1) .AND. (npromz == 0)))  RETURN
@@ -2987,6 +3001,11 @@ CONTAINS
     !$ACC END DATA
 !$OMP END PARALLEL
 
+! ACCWA weird problem with automatic arrays
+#if defined(_CRAYFTN) && _RELEASE_MAJOR <= 18
+    DEALLOCATE(zalml_in, fric_red, uv_mod, g1, g2, g3, &
+    &                      zalml_in_d, zalml_out, zdiff_inout, red_speed)
+#endif
   END SUBROUTINE uv_intp
 
 
