@@ -757,6 +757,115 @@ EOF
 }
 
 #=============================================================================
+set_run_target_csc_scc24_gpu()
+{
+    # SCC24 cluster
+    icon_data_rootFolder=${icon_data_rootFolder:=/appl/local/climatedt/pool/data/ICON}
+
+    set_default use_nproma 0
+    set_default use_nproma_sub 0
+    set_default use_nblocks_c 1
+    set_default use_nblocks_sub 1
+    set_default use_nodes 3
+
+    use_OMP_SCHEDULE="static,1"
+
+    is_serial_run="no"
+
+    set_default use_mpi_procs_pernode 2
+    set_default use_openmp_threads 1
+
+    job_type=parallel
+    tasks_per_node=$use_mpi_procs_pernode
+    SBATCH_nodes="SBATCH --nodes=$use_nodes"
+    SBATCH_ntasks_per_node="SBATCH --ntasks-per-node=${tasks_per_node}"
+
+    # ------------------------------------
+    job_log_name="LOG.%x.%j"
+    # ------------------------------------
+    s_cpu_time="00:30:00"
+    if [[ "x$use_cpu_time" != "x" ]]
+    then
+      s_cpu_time="$use_cpu_time"
+    fi
+    # ------------------------------------
+
+    cat >> $output_script << EOF
+#=============================================================================
+
+# SCC24 cluster gpu batch job parameters
+# ------------------------------
+#SBATCH --job-name=$job_name
+#SBATCH --output=$job_log_name.out
+#SBATCH --error=$job_log_name.out
+#$SBATCH_nodes
+#$SBATCH_ntasks_per_node
+#SBATCH --gpus-per-node=${tasks_per_node}
+#SBATCH --time=${s_cpu_time}
+EOF
+
+    start_header
+    cat >>$output_script <<EOF
+
+export MPICH_GPU_SUPPORT_ENABLED=1
+EOF
+}
+
+#=============================================================================
+set_run_target_csc_scc24_cpu()
+{
+    # SCC24 cluster
+    icon_data_rootFolder=${icon_data_rootFolder:=/appl/local/climatedt/pool/data/ICON}
+
+    set_default use_nproma 32
+    set_default use_nblocks_c 0
+    set_default use_nodes 3
+
+    use_OMP_SCHEDULE="static,1"
+
+    is_serial_run="no"
+
+    set_default use_mpi_procs_pernode 32
+    set_default use_openmp_threads 2
+
+    job_type=parallel
+    tasks_per_node=$use_mpi_procs_pernode
+    SBATCH_nodes="SBATCH --nodes=$use_nodes"
+    SBATCH_ntasks_per_node="SBATCH --ntasks-per-node=${tasks_per_node}"
+    SBATCH_cpus_per_task="SBATCH --cpus-per-task=${use_openmp_threads}"
+
+    use_openmp_threads=\$SLURM_CPUS_PER_TASK
+
+    # ------------------------------------
+    job_log_name="LOG.%x.%j"
+    # ------------------------------------
+    s_cpu_time="00:30:00"
+    if [[ "x$use_cpu_time" != "x" ]]
+    then
+      s_cpu_time="$use_cpu_time"
+    fi
+    # ------------------------------------
+
+    cat >> $output_script << EOF
+#=============================================================================
+
+# SCC24 Cluster cpu batch job parameters
+# ------------------------------
+#SBATCH --job-name=$job_name
+#SBATCH --output=$job_log_name.out
+#SBATCH --error=$job_log_name.out
+#$SBATCH_nodes
+#$SBATCH_ntasks_per_node
+#$SBATCH_cpus_per_task
+#SBATCH --time=${s_cpu_time}
+EOF
+
+    start_header
+    cat >>$output_script <<EOF
+
+export OMP_PLACES=cores
+EOF
+}
 set_run_target_docker_cpu()
 {
     # Docker container

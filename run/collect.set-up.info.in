@@ -70,6 +70,7 @@ case "$use_host" in
     # server (buildmac1.mpimet.mpg.de) in the same way:
     echo "$use_host" | grep '^\([dw]14[6-9]-[1-9][0-9]\{0,2\}\|buildmac1\)\.mpimet\.mpg\.de$' >/dev/null 2>&1 || use_site=mpg.de ;;
   uan0?) use_site=csc.fi ;;
+  o184i07?) use_site=scc24-csc.fi ;;
   *.leonardo.local) use_site=cineca.it ;;
 esac
 test x"$ICON_DOCKER" = x1 && use_site=docker
@@ -281,6 +282,18 @@ case "$use_site" in
     else
       use_target='lumi_cpu'
       use_mpi_startrun="srun ${ICON_CONTAINER_WRAPPER-}"
+    fi
+  ;;
+
+  scc24-csc.fi)
+    use_submit='sbatch'
+    use_sync_submit='sbatch --wait'
+    use_mpi_startrun='srun'
+    if test xyes = x"${use_gpu}"; then
+      use_target='csc_scc24_gpu'
+      use_mpi_startrun="srun ${use_srcdir}/run/run_wrapper/lumi_gpu.sh"
+    else
+      use_target='csc_scc24_cpu'
     fi
   ;;
 
