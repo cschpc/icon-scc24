@@ -23,18 +23,12 @@ fi
 if ${ICON_CONTAINER_IMAGE+:} false; then :
   container=${ICON_CONTAINER_IMAGE}
 else
-  container=${ICON_SW_PREFIX-'/project/project_465000454/icon/sw'}
-  container="${container}/cpe/ccpe-rocm-5.4.1-16.0.1.1.sif"
+  container="/home/jenkovaa/cpe-container/ccpe-24.03-rocm-6.1.sif"
 fi
 
 echo "Using container image ${container}"
 
-sw=${ICON_SW_PREFIX-'/appl/local/climatedt/sw'}
-pool='/appl/local/climatedt/pool'
-
 module --force purge
-
-export ICON_SW_PREFIX=${sw}
 
 current_dir=$(pwd)
 current_script="$(unset CDPATH; cd "$(dirname "${0}")" && pwd)/$(basename "${0}")"
@@ -43,7 +37,12 @@ icon_dir=$(unset CDPATH; cd "${script_dir}/../.." && pwd)
 
 export ICON_CONTAINER_WRAPPER=${current_script}
 
-SINGULARITY_BINDPATH="${current_dir},${sw},${pool}"
+# cmake
+#SINGULARITY_BINDPATH="/bin/cmake,/usr/share/cmake"
+# rsync
+#SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH},/bin/rsync,/lib64/libcrypto.so.3"
+
+SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH},${current_dir}"
 
 # Bind ${icon_dir} for out-of-source builds only:
 if [ "${icon_dir}" != "${current_dir}" ]
@@ -53,7 +52,7 @@ fi
 
 # Libfabric within the container lacks functionality, so it, together with the
 # cxi provider, is also used from host:
-SINGULARITY_BINDPATH="/opt/cray/libfabric/1.15.2.0,/usr/lib64/libcxi.so.1,${SINGULARITY_BINDPATH}"
+SINGULARITY_BINDPATH="/opt/cray/pe/libfabric/1.13.1/lib,${SINGULARITY_BINDPATH}"
 
 # At the runtime, one needs slurmd and munge from host (munge is needed for
 # internode communication):
@@ -64,4 +63,7 @@ fi
 
 export SINGULARITY_BINDPATH
 
-exec singularity exec --rocm "${container}" "$@"
+# set LD_LIBRARY_PATH to correct rocm
+export SINGULARITYENV_LD_LIBRARY_PATH="/opt/rocm/lib:/opt/cray/pe/libfabric/1.13.1/lib"
+
+exec singularity exec "${container}" "$@"
