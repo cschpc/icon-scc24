@@ -1515,7 +1515,7 @@ contains
       end do
     end if
 
-    !$acc                parallel loop gang vector collapse(2) copyin(plev,vmr_h2o)  copyout(col_dry)
+    !$acc                parallel loop gang vector collapse(2) private(delta_plev, fact, m_air) copyin(plev,vmr_h2o)  copyout(col_dry)
     !$omp target teams distribute parallel do simd collapse(2) map(to:plev,vmr_h2o) map(from:col_dry)
     do ilev = 1, nlev-1
       do icol = 1, ncol
@@ -1572,7 +1572,7 @@ contains
     !
     ! column transmissivity
     !
-    !$acc parallel loop gang vector collapse(2) copyin(bands, optical_props, optical_props%tau) copyout(optimal_angles)
+    !$acc parallel loop gang vector collapse(2) private(t, trans_total) copyin(bands, optical_props, optical_props%tau) copyout(optimal_angles)
     !$omp target teams distribute parallel do simd collapse(2) map(to:bands, optical_props%tau) map(from:optimal_angles)
     do icol = 1, ncol
       do igpt = 1, ngpt
@@ -2032,7 +2032,7 @@ contains
     tau_pnt => optical_props%tau
     ssa_pnt => optical_props%ssa
 #endif
-      !$acc parallel loop gang vector collapse(3) default(present)
+      !$acc parallel loop gang vector collapse(3) private(t) default(present)
       !$omp target teams distribute parallel do simd collapse(3)
       do igpt = 1, ngpt
         do ilay = 1, nlay
@@ -2065,7 +2065,7 @@ contains
     tau_pnt => optical_props%tau
     ssa_pnt => optical_props%ssa
 #endif
-      !$acc parallel loop gang vector collapse(3) default(present)
+      !$acc parallel loop gang vector collapse(3) private(t) default(present)
       !$omp target teams distribute parallel do simd collapse(3)
       do igpt = 1, ngpt
         do ilay = 1, nlay

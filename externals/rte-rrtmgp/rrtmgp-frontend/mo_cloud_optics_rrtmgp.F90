@@ -541,7 +541,7 @@ contains
         end do
       type is (ty_optical_props_2str)
         !$acc parallel loop gang vector default(present) collapse(3) &
-        !$acc               copyin(optical_props) copyout(optical_props%tau, optical_props%ssa, optical_props%g)
+        !$acc               copyin(optical_props) copyout(optical_props%tau, optical_props%ssa, optical_props%g) private(tau)
         !$omp target teams distribute parallel do simd collapse(3) &
         !$omp map(from:optical_props%tau, optical_props%ssa, optical_props%g)
         do ibnd = 1, nbnd
@@ -646,7 +646,7 @@ contains
     real(wp) :: fint
     real(wp) :: t, ts  ! tau, tau*ssa, tau*ssa*g
     ! ---------------------------
-    !$acc parallel loop gang vector default(present) collapse(3)
+    !$acc parallel loop gang vector private(fint, t, ts) default(present) collapse(3)
     !$omp target teams distribute parallel do simd collapse(3)
     do ibnd = 1, nbnd
       do ilay = 1,nlay
@@ -701,7 +701,7 @@ contains
     integer  :: icol, ilay, ibnd, irad
     real(wp) :: t, ts
 
-    !$acc parallel loop gang vector default(present) collapse(3)
+    !$acc parallel loop gang vector private(irad, t, ts) default(present) collapse(3)
     !$omp target teams distribute parallel do simd collapse(3)
     do ibnd = 1, nbnd
       do ilay = 1, nlay

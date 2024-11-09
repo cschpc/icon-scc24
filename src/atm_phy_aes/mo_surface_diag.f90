@@ -487,6 +487,7 @@ CONTAINS
     !$ACC END PARALLEL LOOP
 
     CALL generate_index_list_batched(icond(:,:), loidx(jcs:,:), jcs, jce, is, 1)
+    !$ACC WAIT
 
     !$ACC UPDATE HOST(is) ASYNC(1)
     !$ACC WAIT(1)
