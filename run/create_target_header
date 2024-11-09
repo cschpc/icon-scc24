@@ -760,12 +760,12 @@ EOF
 set_run_target_csc_scc24_gpu()
 {
     # SCC24 cluster
-    icon_data_rootFolder=${icon_data_rootFolder:=/appl/local/climatedt/pool/data/ICON}
+    icon_data_rootFolder=${icon_data_rootFolder:=/icon-data}
 
-    set_default use_nproma 0
-    set_default use_nproma_sub 0
-    set_default use_nblocks_c 1
-    set_default use_nblocks_sub 1
+    set_default use_nproma 20000
+    set_default use_nproma_sub 20000
+    set_default use_nblocks_c 0
+    set_default use_nblocks_sub 0
     set_default use_nodes 3
 
     use_OMP_SCHEDULE="static,1"
@@ -800,14 +800,14 @@ set_run_target_csc_scc24_gpu()
 #SBATCH --error=$job_log_name.out
 #$SBATCH_nodes
 #$SBATCH_ntasks_per_node
-#SBATCH --gpus-per-node=${tasks_per_node}
 #SBATCH --time=${s_cpu_time}
 EOF
 
     start_header
     cat >>$output_script <<EOF
 
-export MPICH_GPU_SUPPORT_ENABLED=1
+# For kernel launches asynchronous to avoid possible race conditions not fixed yet
+export CRAY_ACC_NO_ASYNC=1
 EOF
 }
 
@@ -815,7 +815,7 @@ EOF
 set_run_target_csc_scc24_cpu()
 {
     # SCC24 cluster
-    icon_data_rootFolder=${icon_data_rootFolder:=/appl/local/climatedt/pool/data/ICON}
+    icon_data_rootFolder=${icon_data_rootFolder:=/icon-data}
 
     set_default use_nproma 32
     set_default use_nblocks_c 0
@@ -843,6 +843,7 @@ set_run_target_csc_scc24_cpu()
     if [[ "x$use_cpu_time" != "x" ]]
     then
       s_cpu_time="$use_cpu_time"
+#SBATCH --gpus-per-node=${tasks_per_node}
     fi
     # ------------------------------------
 
