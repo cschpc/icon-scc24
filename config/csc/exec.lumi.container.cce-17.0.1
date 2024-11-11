@@ -37,12 +37,12 @@ icon_dir=$(unset CDPATH; cd "${script_dir}/../.." && pwd)
 
 export ICON_CONTAINER_WRAPPER=${current_script}
 
-# cmake
-#SINGULARITY_BINDPATH="/bin/cmake,/usr/share/cmake"
-# rsync
-#SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH},/bin/rsync,/lib64/libcrypto.so.3"
-
 SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH},${current_dir}"
+
+# PMI is needed from host, and as it depends on libc version on host, libc 
+# and few others are also bind mounted
+SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH},/lib64/libpmi.so.0:/opt/cray/pe/lib64/libpmi.so.0,/lib64/libpmi2.so.0:/opt/cray/pe/lib64/libpmi2.so.0,/lib64/libslurm_pmi-22.05.9.so,/lib64/ld-linux-x86-64.so.2,/lib64/libc.so.6,/lib64/libdl.so.2,/lib64/libpthread.so.0,/lib64/librt.so.1"
+
 
 # Bind ${icon_dir} for out-of-source builds only:
 if [ "${icon_dir}" != "${current_dir}" ]
@@ -56,9 +56,9 @@ SINGULARITY_BINDPATH="/opt/cray/pe/libfabric/1.13.1/lib,${SINGULARITY_BINDPATH}"
 
 # At the runtime, one needs slurmd and munge from host (munge is needed for
 # internode communication):
-if [ -d '/var/spool/slurmd/mpi_cray_shasta' ]
+if [ -d '/var/spool/slurmd' ]
 then
-  SINGULARITY_BINDPATH="/var/spool/slurmd/mpi_cray_shasta,/var/run/munge,${SINGULARITY_BINDPATH}"
+  SINGULARITY_BINDPATH="/var/spool/slurmd,/var/run/munge,${SINGULARITY_BINDPATH}"
 fi
 
 export SINGULARITY_BINDPATH
