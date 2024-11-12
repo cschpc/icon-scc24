@@ -291,7 +291,7 @@ case "$use_site" in
     use_mpi_startrun='srun'
     if test xyes = x"${use_gpu}"; then
       use_target='csc_scc24_gpu'
-      use_mpi_startrun="srun ${ICON_CONTAINER_WRAPPER-} ${use_srcdir}/run/run_wrapper/lumi_gpu.sh"
+      use_mpi_startrun="srun -m cyclic ${ICON_CONTAINER_WRAPPER-} ${use_srcdir}/run/run_wrapper/lumi_gpu.sh"
     else
       use_target='csc_scc24_cpu'
     fi

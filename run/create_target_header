@@ -780,6 +780,10 @@ set_run_target_csc_scc24_gpu()
     SBATCH_nodes="SBATCH --nodes=$use_nodes"
     SBATCH_ntasks_per_node="SBATCH --ntasks-per-node=${tasks_per_node}"
 
+    mpi_total_procs="\${SLURM_NTASKS}"
+    num_io_procs="\$((SLURM_NTASKS - SLURM_NNODES * 2))"
+    use_mpi_startrun="${use_mpi_startrun} -n ${mpi_total_procs} -o ${num_io_procs} -e"
+
     # ------------------------------------
     job_log_name="LOG.%x.%j"
     # ------------------------------------

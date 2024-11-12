@@ -10,7 +10,30 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # ------------------------------------------
 
-device=$(($SLURM_LOCALID%8))
+while getopts n:o:e: argv
+do
+    case "${argv}" in
+        n) mpi_total_procs=${OPTARG};;
+        o) io_tasks=${OPTARG};;
+        e) executable=${OPTARG};;
+    esac
+done
 
-export ROCR_VISIBLE_DEVICES=$device
-exec "$@"
+set -eu
+(( compute_tasks = mpi_total_procs - io_tasks ))
+
+if (( SLURM_PROCID < compute_tasks ))
+then
+
+    echo Compute process $SLURM_LOCALID on $(hostname)
+
+    device=$(($SLURM_LOCALID%8))
+
+    export ROCR_VISIBLE_DEVICES=$device
+
+else
+
+    echo IO process $SLURM_LOCALID on $(hostname)
+
+fi
+exec $executable
